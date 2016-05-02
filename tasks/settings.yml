@@ -8,9 +8,35 @@
     state: present
   register: jenkins_init_prefix
 
+- name: modify jenkins defaults to fix cli calls
+  lineinfile:
+    dest: "{{ jenkins_init_file }}"
+    line: 'JAVA_ARGS+=" -Dhudson.diyChunking=false "'
+    state: present
+  register: jenkins_init_cli_fix
+
+- name: modify jenkins defaults to set loose content security policy
+  lineinfile:
+    dest: "{{ jenkins_init_file }}"
+    line: >
+      JAVA_ARGS+=" -Djava.awt.headless=true -Dhudson.model.DirectoryBrowserSupport.CSP=\"sandbox allow-scripts allow-same-origin; default-src 'none'; img-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; font-src 'self'\""
+    state: present
+  register: jenkins_init_csp_fix
+
+- name: disable CSRF crumb issuer (prevents cli from working)
+  replace:
+    dest: "/var/lib/jenkins/config.xml"
+    regexp: '<crumbIssuer (.|\n)*</crumbIssuer>'
+    replace: ''
+  register: jenkins_init_crumb_issuer
+
 - name: Immediately restart Jenkins on init config changes.
   service: name=jenkins state=restarted
-  when: jenkins_init_prefix.changed
+  when: >
+    jenkins_init_prefix.changed or
+    jenkins_init_cli_fix.changed or
+    jenkins_init_crumb_issuer.changed or
+    jenkins_init_csp_fix.changed
 
 - name: Set HTTP port in Jenkins config.
   lineinfile:
