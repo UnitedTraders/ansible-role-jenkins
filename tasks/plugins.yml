@@ -21,34 +21,21 @@
     group: jenkins
     mode: 0755
 
-- name: Install recommended Jenkins plugins.
-  command: >
-    java -jar {{ jenkins_jar_location }}
-      -s http://{{ jenkins_hostname }}:{{ jenkins_http_port }}{{ jenkins_url_prefix | default('') }}/ install-plugin {{ item }}
-      --username {{ jenkins_users.0.username }}
-      --password {{ jenkins_users.0.password }}
-    creates=/var/lib/jenkins/plugins/{{ item }}.jpi
-  with_items: "{{ jenkins_recommended_plugins }}"
+# Install recommended plugins
+- include: plugins-install.yml type=recommended jenkins_plugins_to_install="{{ jenkins_recommended_plugins }}"
   when: jenkins_install_recommended_plugins
-  notify: restart jenkins
 
-- name: Install Jenkins plugins.
-  command: >
-    java -jar {{ jenkins_jar_location }}
-      -s http://{{ jenkins_hostname }}:{{ jenkins_http_port }}{{ jenkins_url_prefix | default('') }}/ install-plugin {{ item }}
-      --username {{ jenkins_users.0.username }}
-      --password {{ jenkins_users.0.password }}
-    creates=/var/lib/jenkins/plugins/{{ item }}.jpi
-  with_items: "{{ jenkins_plugins }}"
+# Install custom plugins
+- include: plugins-install.yml type=custom jenkins_plugins_to_install="{{ jenkins_plugins }}"
   when: jenkins_plugins is defined and jenkins_plugins | length > 0
-  notify: restart jenkins
 
+# Check and install plugin updates
 - name: List plugins to be updated
   shell: >
-    java -jar {{ jenkins_jar_location }} -noKeyAuth -s http://{{ jenkins_hostname }}:{{ jenkins_http_port }}{{ jenkins_url_prefix | default('') }}/ list-plugins | grep ')$' | cut -f 1 -d ' ' | awk 1 ORS=' '
+    java -jar {{ jenkins_jar_location }} -noKeyAuth -s http://{{ jenkins_hostname }}:{{ jenkins_http_port }}{{ jenkins_url_prefix | default('') }}/ list-plugins --username {{ jenkins_admin_users.0.username }} --password {{ jenkins_admin_users.0.password }} | grep ')$' | cut -f 1 -d ' ' | awk 1 ORS=' '
   register: plugins_updates
   changed_when: false
   when: jenkins_update_plugins
 
-- include: plugins-update.yml
-  when: jenkins_update_plugins
+- include: plugins-install.yml type="updates for" jenkins_plugins_to_install="{{ plugins_updates.stdout_lines }}"
+  when: plugins_updates.stdout_lines is defined and plugins_updates.stdout_lines | length > 0
