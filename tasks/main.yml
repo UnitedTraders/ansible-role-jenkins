@@ -20,11 +20,21 @@
 - include: setup-Debian.yml
   when: ansible_os_family == 'Debian'
 
+# Configure Jenkins init settings.
+# pre-requisite: create $JENKINS_HOME/tmp
+- name: create new tmp dir
+  file:
+    path: /var/lib/jenkins/tmp
+    owner: jenkins
+    group: jenkins
+    mode: 0755
+    state: directory
+
+- include: settings.yml
+
+# Enable and start jenkins
 - name: Ensure Jenkins is started and runs on startup.
   service: name=jenkins state=started enabled=yes
-
-# Configure Jenkins init settings.
-- include: settings.yml
 
 # Initialize default admin user(s)
 - name: check if admin users are defined

@@ -7,6 +7,12 @@
     line: 'JENKINS_ARGS="$JENKINS_ARGS --prefix={{ jenkins_url_prefix }}"'
   register: jenkins_init_prefix
 
+- name: modify jenkins defaults to change tmp directory
+  lineinfile:
+    dest: "{{ jenkins_init_file }}"
+    line: 'JENKINS_JAVA_OPTIONS="$JENKINS_JAVA_OPTIONS -Djava.io.tmpdir=$JENKINS_HOME/tmp "'
+  register: jenkins_init_tmpdir_fix
+
 - name: modify jenkins defaults to fix cli calls
   lineinfile:
     dest: "{{ jenkins_init_file }}"
@@ -45,6 +51,7 @@
   service: name=jenkins state=restarted
   when: >
     jenkins_init_prefix.changed or
+    jenkins_init_tmpdir_fix.changed or
     jenkins_init_cli_fix.changed or
     jenkins_init_crumb_issuer.changed or
     jenkins_init_csp_fix.changed or
