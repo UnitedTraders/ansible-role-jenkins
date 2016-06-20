@@ -4,6 +4,10 @@ jenkins_connection_retries: 60
 jenkins_hostname: localhost
 jenkins_http_port: 8080
 jenkins_jar_location: /opt/jenkins-cli.jar
+# NB! need to change this setting
+jenkins_admin_users:
+  - username: admin
+    password: admin
 jenkins_plugins: []
 jenkins_update_plugins: true
 jenkins_url_prefix: ""

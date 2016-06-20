@@ -1,7 +1,4 @@
 ---
-dependencies:
-  - geerlingguy.java
-
 galaxy_info:
   author: geerlingguy
   description: Jenkins CI
@@ -22,3 +19,5 @@ galaxy_info:
   galaxy_tags:
     - development
     - packaging
+
+dependencies: []

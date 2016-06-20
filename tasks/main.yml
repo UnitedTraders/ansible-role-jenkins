@@ -30,11 +30,8 @@
     mode: 0755
     state: directory
 
+# Update system settings and start
 - include: settings.yml
-
-# Enable and start jenkins
-- name: Ensure Jenkins is started and runs on startup.
-  service: name=jenkins state=started enabled=yes
 
 # Initialize default admin user(s)
 - name: check if admin users are defined

@@ -3,6 +3,7 @@
   file:
     path: "/var/lib/jenkins/users/{{ item.username }}"
     owner: jenkins
+    group: jenkins
     state: directory
   with_items: "{{ jenkins_users }}"
   register: jenkins_user_folders
